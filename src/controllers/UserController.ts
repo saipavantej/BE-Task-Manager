@@ -9,11 +9,11 @@ const speakeasy = require("speakeasy");
 const registerUser = async (req: Request, res: Response) => {
   try {
     if (!req.body.user_name || !req.body.email_id || !req.body.password) {
-      res.status(400).send({ message: "fields missing" });
+      res.status(200).send({ error: true, message: "fields missing" });
     } else {
       const userExists = await User.findOne({ email_id: req.body.email_id });
       if (userExists) {
-        res.status(400).send({ error: true, message: "user already exists" });
+        res.status(200).send({ error: true, message: "user already exists" });
       } else {
         let user = await User({
           user_name: req.body.user_name,
@@ -24,7 +24,7 @@ const registerUser = async (req: Request, res: Response) => {
         await user.save();
         if (!user)
           return res
-            .status(400)
+            .status(200)
             .send({ error: true, message: "the user cannot be created!" });
         res.status(200).send({
           error: false,
@@ -39,7 +39,7 @@ const registerUser = async (req: Request, res: Response) => {
       }
     }
   } catch (error) {
-    res.status(500).send({ error: true, message: "Internal Server Error" });
+    res.status(200).send({ error: true, message: "Internal Server Error" });
   }
 };
 
@@ -47,7 +47,7 @@ const loginUser = async (req: Request, res: Response) => {
   try {
     let user = await User.findOne({ email_id: req.body.email_id });
     if (!user) {
-      return res.status(400).send({ error: true, message: "user not found" });
+      return res.status(200).send({ error: true, message: "user not found" });
     }
 
     if (user && bcrypt.compareSync(req.body.password, user.password)) {
@@ -65,7 +65,7 @@ const loginUser = async (req: Request, res: Response) => {
       res.status(200).send({ error: true, message: "password is incorrect" });
     }
   } catch (error) {
-    res.status(500).send({ error: true, message: "Internal Server Error" });
+    res.status(200).send({ error: true, message: "Internal Server Error" });
   }
 };
 
@@ -79,7 +79,7 @@ const editProfile = async (req: Request, res: Response) => {
       new: true,
     });
     if (!user) {
-      return res.status(404).send({ error: true, message: "User not found" });
+      return res.status(200).send({ error: true, message: "User not found" });
     }
     res.status(200).send({
       error: false,
@@ -91,7 +91,7 @@ const editProfile = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(500).send({ error: true, message: "Internal Server Error" });
+    res.status(200).send({ error: true, message: "Internal Server Error" });
   }
 };
 
@@ -99,7 +99,7 @@ const forgetPassword = async (req: Request, res: Response) => {
   try {
     let user = await User.findOne({ email_id: req.body.email_id });
     if (!user) {
-      return res.status(400).send({ error: true, message: "user not found" });
+      return res.status(200).send({ error: true, message: "user not found" });
     }
     const secret = await speakeasy.generateSecret({ length: 20 }).base32;
     const otp = speakeasy.totp({
@@ -118,7 +118,7 @@ const forgetPassword = async (req: Request, res: Response) => {
 
     transporter.sendMail(mailOptions, (error: any, info: any) => {
       if (error) {
-        return res.status(400).send({
+        return res.status(200).send({
           error: true,
           message: `something went wrong while sending otp through email ${error}`,
         });
@@ -137,23 +137,23 @@ const forgetPassword = async (req: Request, res: Response) => {
         .catch((updateError: any) => {
           console.error(updateError);
           res
-            .status(500)
+            .status(200)
             .send({ error: true, message: "Internal Server Error" });
         });
     });
   } catch (error) {
-    res.status(500).send({ error: true, message: "Internal Server Error" });
+    res.status(200).send({ error: true, message: "Internal Server Error" });
   }
 };
 
 const resetPassword = async (req: Request, res: Response) => {
   try {
     if (!req.body.email_id || !req.body.otp || !req.body.password) {
-      res.status(400).send({ message: "fields missing" });
+      res.status(200).send({ message: "fields missing" });
     } else {
       let user = await User.findOne({ email_id: req.body.email_id });
       if (!user) {
-        return res.status(400).send({ error: true, message: "user not found" });
+        return res.status(200).send({ error: true, message: "user not found" });
       } else {
         const verified = speakeasy.totp.verify({
           secret: user.secret,
@@ -174,12 +174,12 @@ const resetPassword = async (req: Request, res: Response) => {
             .status(200)
             .send({ error: false, message: "password reset succesfull" });
         } else {
-          return res.status(401).send({ error: true, message: "Invalid OTP" });
+          return res.status(200).send({ error: true, message: "Invalid OTP" });
         }
       }
     }
   } catch (error) {
-    res.status(500).send({ error: true, message: "Internal Server Error" });
+    res.status(200).send({ error: true, message: "Internal Server Error" });
   }
 };
 
