@@ -4,7 +4,7 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
 import userRoutes from "./src/routes/UserRoute";
-
+import tasksRoutes from "./src/routes/TaskRoute";
 const app = express();
 
 app.use(cors());
@@ -23,8 +23,8 @@ app.use(
 );
 app.use(express.json());
 
-
 app.use("/api/user", userRoutes);
+app.use("/api/task", tasksRoutes);
 
 const port = process.env.PORT || 5000;
 

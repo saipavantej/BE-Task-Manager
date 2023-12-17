@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { transporter } from "../config/sendEmail";
-
+const jwt = require("jsonwebtoken");
 const User = require("../modals/UserModal");
 const generateToken = require("../config/token");
 const bcrypt = require("bcryptjs");
@@ -71,16 +71,20 @@ const loginUser = async (req: Request, res: Response) => {
 
 const editProfile = async (req: Request, res: Response) => {
   try {
-    const { user_id, user_name } = req.body;
-    const updatedUser = {
-      user_name,
-    };
-    const user = await User.findOneAndUpdate({ _id: user_id }, updatedUser, {
+    const token = req.headers.authorization?.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const { user_name, picture } = req.body;
+    const updatedUser = { user_name, picture };
+    const user = await User.findOneAndUpdate({ _id: decoded.id }, updatedUser, {
       new: true,
+      runValidators: true,
     });
+
     if (!user) {
       return res.status(200).send({ error: true, message: "User not found" });
     }
+
     res.status(200).send({
       error: false,
       response: {
@@ -94,7 +98,6 @@ const editProfile = async (req: Request, res: Response) => {
     res.status(200).send({ error: true, message: "Internal Server Error" });
   }
 };
-
 const forgetPassword = async (req: Request, res: Response) => {
   try {
     let user = await User.findOne({ email_id: req.body.email_id });
